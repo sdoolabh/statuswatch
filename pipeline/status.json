@@ -1,0 +1,287 @@
+{
+  "generated_at": "2026-07-09T23:41:47.678677+00:00",
+  "vendors": [
+    {
+      "slug": "anthropic",
+      "name": "Anthropic",
+      "category": "ai",
+      "status": "operational",
+      "observed_at": "2026-07-09T23:41:46.547327+00:00"
+    },
+    {
+      "slug": "atlassian",
+      "name": "Atlassian",
+      "category": "devtools",
+      "status": "operational",
+      "observed_at": "2026-07-09T23:41:46.386323+00:00"
+    },
+    {
+      "slug": "aws",
+      "name": "AWS",
+      "category": "cloud",
+      "status": "operational",
+      "observed_at": "2026-07-09T23:41:47.673327+00:00"
+    },
+    {
+      "slug": "azure",
+      "name": "Microsoft Azure",
+      "category": "cloud",
+      "status": "operational",
+      "observed_at": "2026-07-09T23:41:47.676954+00:00"
+    },
+    {
+      "slug": "circleci",
+      "name": "CircleCI",
+      "category": "ci",
+      "status": "maintenance",
+      "observed_at": "2026-07-09T23:41:46.453524+00:00"
+    },
+    {
+      "slug": "cloudflare",
+      "name": "Cloudflare",
+      "category": "network",
+      "status": "degraded",
+      "observed_at": "2026-07-09T23:41:46.160197+00:00"
+    },
+    {
+      "slug": "datadog",
+      "name": "Datadog",
+      "category": "observability",
+      "status": "operational",
+      "observed_at": "2026-07-09T23:41:46.210470+00:00"
+    },
+    {
+      "slug": "digitalocean",
+      "name": "DigitalOcean",
+      "category": "cloud",
+      "status": "degraded",
+      "observed_at": "2026-07-09T23:41:46.981451+00:00"
+    },
+    {
+      "slug": "discord",
+      "name": "Discord",
+      "category": "collaboration",
+      "status": "operational",
+      "observed_at": "2026-07-09T23:41:46.776909+00:00"
+    },
+    {
+      "slug": "dropbox",
+      "name": "Dropbox",
+      "category": "storage",
+      "status": "operational",
+      "observed_at": "2026-07-09T23:41:46.743205+00:00"
+    },
+    {
+      "slug": "elastic",
+      "name": "Elastic Cloud",
+      "category": "data",
+      "status": "partial_outage",
+      "observed_at": "2026-07-09T23:41:47.213538+00:00"
+    },
+    {
+      "slug": "figma",
+      "name": "Figma",
+      "category": "collaboration",
+      "status": "operational",
+      "observed_at": "2026-07-09T23:41:47.395516+00:00"
+    },
+    {
+      "slug": "gcp",
+      "name": "Google Cloud",
+      "category": "cloud",
+      "status": "operational",
+      "observed_at": "2026-07-09T23:41:47.670476+00:00"
+    },
+    {
+      "slug": "github",
+      "name": "GitHub",
+      "category": "devtools",
+      "status": "operational",
+      "observed_at": "2026-07-09T23:41:46.036870+00:00"
+    },
+    {
+      "slug": "grafana",
+      "name": "Grafana Cloud",
+      "category": "observability",
+      "status": "operational",
+      "observed_at": "2026-07-09T23:41:47.161965+00:00"
+    },
+    {
+      "slug": "hashicorp",
+      "name": "HashiCorp Cloud",
+      "category": "devtools",
+      "status": "operational",
+      "observed_at": "2026-07-09T23:41:47.101989+00:00"
+    },
+    {
+      "slug": "linear",
+      "name": "Linear",
+      "category": "devtools",
+      "status": "operational",
+      "observed_at": "2026-07-09T23:41:47.540060+00:00"
+    },
+    {
+      "slug": "mongodb",
+      "name": "MongoDB Atlas",
+      "category": "data",
+      "status": "degraded",
+      "observed_at": "2026-07-09T23:41:47.584364+00:00"
+    },
+    {
+      "slug": "netlify",
+      "name": "Netlify",
+      "category": "hosting",
+      "status": "operational",
+      "observed_at": "2026-07-09T23:41:46.933897+00:00"
+    },
+    {
+      "slug": "newrelic",
+      "name": "New Relic",
+      "category": "observability",
+      "status": "operational",
+      "observed_at": "2026-07-09T23:41:47.255360+00:00"
+    },
+    {
+      "slug": "notion",
+      "name": "Notion",
+      "category": "collaboration",
+      "status": "operational",
+      "observed_at": "2026-07-09T23:41:47.360305+00:00"
+    },
+    {
+      "slug": "npm",
+      "name": "npm",
+      "category": "registry",
+      "status": "operational",
+      "observed_at": "2026-07-09T23:41:46.279695+00:00"
+    },
+    {
+      "slug": "openai",
+      "name": "OpenAI",
+      "category": "ai",
+      "status": "degraded",
+      "observed_at": "2026-07-09T23:41:46.504074+00:00"
+    },
+    {
+      "slug": "pypi",
+      "name": "PyPI",
+      "category": "registry",
+      "status": "operational",
+      "observed_at": "2026-07-09T23:41:46.333993+00:00"
+    },
+    {
+      "slug": "reddit",
+      "name": "Reddit",
+      "category": "consumer",
+      "status": "operational",
+      "observed_at": "2026-07-09T23:41:46.822591+00:00"
+    },
+    {
+      "slug": "sendgrid",
+      "name": "SendGrid",
+      "category": "messaging",
+      "status": "operational",
+      "observed_at": "2026-07-09T23:41:46.649499+00:00"
+    },
+    {
+      "slug": "sentry",
+      "name": "Sentry",
+      "category": "observability",
+      "status": "operational",
+      "observed_at": "2026-07-09T23:41:47.307991+00:00"
+    },
+    {
+      "slug": "shopify",
+      "name": "Shopify",
+      "category": "commerce",
+      "status": "operational",
+      "observed_at": "2026-07-09T23:41:47.441567+00:00"
+    },
+    {
+      "slug": "slack",
+      "name": "Slack",
+      "category": "collaboration",
+      "status": "operational",
+      "observed_at": "2026-07-09T23:41:47.668698+00:00"
+    },
+    {
+      "slug": "snowflake",
+      "name": "Snowflake",
+      "category": "data",
+      "status": "operational",
+      "observed_at": "2026-07-09T23:41:47.032907+00:00"
+    },
+    {
+      "slug": "stripe",
+      "name": "Stripe",
+      "category": "payments",
+      "status": "operational",
+      "observed_at": "2026-07-09T23:41:47.631498+00:00"
+    },
+    {
+      "slug": "twilio",
+      "name": "Twilio",
+      "category": "messaging",
+      "status": "degraded",
+      "observed_at": "2026-07-09T23:41:46.590986+00:00"
+    },
+    {
+      "slug": "twitch",
+      "name": "Twitch",
+      "category": "consumer",
+      "status": "operational",
+      "observed_at": "2026-07-09T23:41:47.496402+00:00"
+    },
+    {
+      "slug": "vercel",
+      "name": "Vercel",
+      "category": "hosting",
+      "status": "operational",
+      "observed_at": "2026-07-09T23:41:46.873586+00:00"
+    },
+    {
+      "slug": "zoom",
+      "name": "Zoom",
+      "category": "collaboration",
+      "status": "operational",
+      "observed_at": "2026-07-09T23:41:46.691531+00:00"
+    }
+  ],
+  "ongoing_incidents": [
+    {
+      "vendor": "mongodb",
+      "title": "Atlas Stream Processing is experiencing issues in Azure - West Europe",
+      "impact": "degraded",
+      "started_at": "2026-07-09T23:03:56.359000+00:00",
+      "url": "https://stspg.io/896391t5m0lb"
+    },
+    {
+      "vendor": "digitalocean",
+      "title": "Kubernetes Deployments in NYC1",
+      "impact": "degraded",
+      "started_at": "2026-07-09T20:31:52.145000+00:00",
+      "url": "https://stspg.io/p8xctv4k5yjv"
+    },
+    {
+      "vendor": "mongodb",
+      "title": "Atlas is experiencing issues with issuing certificates from Lets Encrypt",
+      "impact": "degraded",
+      "started_at": "2026-07-09T19:37:32.787000+00:00",
+      "url": "https://stspg.io/gq098tnc7xd0"
+    },
+    {
+      "vendor": "twilio",
+      "title": "SMS Delivery Delays From a Subset of Twilio Long Codes and Short Codes to Liberty Mobile Puerto Rico",
+      "impact": "degraded",
+      "started_at": "2026-07-09T19:22:34.544000+00:00",
+      "url": "https://stspg.io/72nzb54twhrq"
+    },
+    {
+      "vendor": "openai",
+      "title": "Codex, workspace analytics, conversation search, searching for custom GPTs, ChatGPT user invites, and Compliance Log Platform download endpoint not working in FedRAMP workspaces",
+      "impact": "degraded",
+      "started_at": "2026-07-01T03:38:18+00:00",
+      "url": null
+    }
+  ]
+}

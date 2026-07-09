@@ -114,8 +114,17 @@ class GcpAdapter(Adapter):
 
 
 class AwsAdapter(Adapter):
-    """AWS's public health data. The legacy data.json lists current events;
-    verify with probe — AWS has migrated dashboards before and may again."""
+    """AWS public health data (data.json): a LIST of event objects.
+    Quirks handled deliberately:
+      * UTF-16 w/ BOM payload (json.loads on bytes auto-detects)
+      * top-level 'date' is epoch SECONDS; transition 'timestamp' is MILLISECONDS
+      * top-level 'status' is PEAK severity, never updated on resolution —
+        resolution must be derived from impacted_service_status_changes:
+        an event is ongoing only if some service's latest transition != '0'
+    Codes: 0 ok, 1 informational, 2 degradation, 3 disruption."""
+
+    SEVERITY = {"1": "degraded", "2": "partial_outage", "3": "major_outage"}
+    RANK = {"operational": 0, "degraded": 1, "partial_outage": 2, "major_outage": 3}
 
     async def fetch(self, session) -> Observation:
         t0 = time.monotonic()
@@ -128,26 +137,63 @@ class AwsAdapter(Adapter):
         except Exception as exc:
             return self.unknown(f"{type(exc).__name__}: {exc}")
 
-        latency = int((time.monotonic() - t0) * 1000)
-        current = doc.get("current") or []
-        if not current:
-            status = "operational"
-        else:
-            # AWS severity levels: 0/1 informational..., treat any active event as degraded+
-            status = "partial_outage" if len(current) > 2 else "degraded"
+        if not isinstance(doc, list):
+            return self.unknown(f"unexpected payload shape: {type(doc).__name__}")
 
+        latency = int((time.monotonic() - t0) * 1000)
         incidents = []
-        for ev in current[:50]:
+        worst_ongoing = "operational"
+
+        for ev in doc:
+            if not isinstance(ev, dict):
+                continue
+            try:
+                started = datetime.fromtimestamp(int(ev.get("date", 0)), tz=timezone.utc)
+            except (ValueError, TypeError):
+                continue
+
+            impact = self.SEVERITY.get(str(ev.get("status", "")), "degraded")
+
+            # resolution from the transition log
+            latest = {}
+            for t in ev.get("impacted_service_status_changes") or []:
+                ts, svc = t.get("timestamp"), t.get("service")
+                if ts is None or svc is None:
+                    continue
+                if svc not in latest or ts >= latest[svc][0]:
+                    latest[svc] = (ts, str(t.get("current_status")))
+
+            STALE_DAYS = 7  # no transition activity for a week => event is over
+            if latest:
+                newest_ts = max(ts for ts, _ in latest.values())
+                newest_at = datetime.fromtimestamp(newest_ts / 1000, tz=timezone.utc)
+                all_clear = all(st == "0" for _, st in latest.values())
+                gone_quiet = (_now() - newest_at).days >= STALE_DAYS
+                # Feed quirk: AWS closes events without back-filling every
+                # service's ->0 transition, so silence is also resolution.
+                resolved = all_clear or gone_quiet
+                resolved_at = newest_at if resolved else None
+            else:
+                resolved = str(ev.get("status", "")) == "0" or \
+                           (_now() - started).days >= STALE_DAYS
+                resolved_at = started if resolved else None
+
+            if not resolved and self.RANK[impact] > self.RANK[worst_ongoing]:
+                worst_ongoing = impact
+
+            n_services = len(ev.get("impacted_services") or {})
+            suffix = f" ({n_services} services)" if n_services > 1 else ""
             incidents.append(Incident(
-                provider_incident_id=str(ev.get("event_id") or ev.get("archive_id") or hash(json.dumps(ev, sort_keys=True))),
-                title=f"{ev.get('service_name', 'AWS')}: {ev.get('summary', '')[:200]}",
-                impact="degraded",
-                status="investigating",
-                started_at=_now(),
-                resolved_at=None,
+                provider_incident_id=ev.get("arn") or f"aws-{ev.get('date')}-{ev.get('service')}",
+                title=f"{ev.get('service_name', 'AWS')} — {ev.get('region_name', 'global')}{suffix}: {(ev.get('summary') or '').strip()[:200]}",
+                impact=impact,
+                status="resolved" if resolved else "investigating",
+                started_at=started,
+                resolved_at=resolved_at,
                 url="https://health.aws.amazon.com/health/status",
             ))
-        return Observation(vendor_slug=self.slug, status=status,
+
+        return Observation(vendor_slug=self.slug, status=worst_ongoing,
                            incidents=incidents, raw=raw, latency_ms=latency)
 
 

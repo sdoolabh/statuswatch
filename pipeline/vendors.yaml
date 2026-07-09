@@ -11,10 +11,10 @@ vendors:
   - {slug: datadog,      name: Datadog,         adapter: statuspage, base_url: https://status.datadoghq.com,      category: observability}
   - {slug: npm,          name: npm,             adapter: statuspage, base_url: https://status.npmjs.org,          category: registry}
   - {slug: pypi,         name: PyPI,            adapter: statuspage, base_url: https://status.python.org,         category: registry}
-  - {slug: dockerhub,    name: Docker Hub,      adapter: statuspage, base_url: https://status.docker.com,         category: registry}
+  - {slug: dockerhub,    name: Docker Hub,      adapter: statuspage, base_url: https://www.dockerstatus.com,      category: registry, enabled: false}
   - {slug: atlassian,    name: Atlassian,       adapter: statuspage, base_url: https://status.atlassian.com,      category: devtools}
   - {slug: circleci,     name: CircleCI,        adapter: statuspage, base_url: https://status.circleci.com,       category: ci}
-  - {slug: pagerduty,    name: PagerDuty,       adapter: statuspage, base_url: https://status.pagerduty.com,      category: incident}
+  - {slug: pagerduty,    name: PagerDuty,       adapter: statuspage, base_url: https://status.pagerduty.com,      category: incident, enabled: false}
   - {slug: openai,       name: OpenAI,          adapter: statuspage, base_url: https://status.openai.com,         category: ai}
   - {slug: anthropic,    name: Anthropic,       adapter: statuspage, base_url: https://status.anthropic.com,      category: ai}
   - {slug: twilio,       name: Twilio,          adapter: statuspage, base_url: https://status.twilio.com,         category: messaging}
@@ -26,16 +26,16 @@ vendors:
   - {slug: vercel,       name: Vercel,          adapter: statuspage, base_url: https://www.vercel-status.com,     category: hosting}
   - {slug: netlify,      name: Netlify,         adapter: statuspage, base_url: https://www.netlifystatus.com,     category: hosting}
   - {slug: digitalocean, name: DigitalOcean,    adapter: statuspage, base_url: https://status.digitalocean.com,   category: cloud}
-  - {slug: fastly,       name: Fastly,          adapter: statuspage, base_url: https://www.fastlystatus.com,      category: network}
+  - {slug: fastly,       name: Fastly,          adapter: statuspage, base_url: https://www.fastlystatus.com,      category: network, enabled: false}
   - {slug: snowflake,    name: Snowflake,       adapter: statuspage, base_url: https://status.snowflake.com,      category: data}
   - {slug: hashicorp,    name: HashiCorp Cloud, adapter: statuspage, base_url: https://status.hashicorp.com,      category: devtools}
   - {slug: grafana,      name: Grafana Cloud,   adapter: statuspage, base_url: https://status.grafana.com,        category: observability}
   - {slug: elastic,      name: Elastic Cloud,   adapter: statuspage, base_url: https://status.elastic.co,         category: data}
   - {slug: newrelic,     name: New Relic,       adapter: statuspage, base_url: https://status.newrelic.com,       category: observability}
   - {slug: sentry,       name: Sentry,          adapter: statuspage, base_url: https://status.sentry.io,          category: observability}
-  - {slug: notion,       name: Notion,          adapter: statuspage, base_url: https://status.notion.so,          category: collaboration}
+  - {slug: notion,       name: Notion,          adapter: statuspage, base_url: https://www.notion-status.com,     category: collaboration}
   - {slug: figma,        name: Figma,           adapter: statuspage, base_url: https://status.figma.com,          category: collaboration}
-  - {slug: intercom,     name: Intercom,        adapter: statuspage, base_url: https://www.intercomstatus.com,    category: messaging}
+  - {slug: intercom,     name: Intercom,        adapter: statuspage, base_url: https://status.intercom.com,       category: messaging, enabled: false}
   - {slug: shopify,      name: Shopify,         adapter: statuspage, base_url: https://www.shopifystatus.com,     category: commerce}
   - {slug: twitch,       name: Twitch,          adapter: statuspage, base_url: https://status.twitch.tv,          category: consumer}
   - {slug: linear,       name: Linear,          adapter: statuspage, base_url: https://linearstatus.com,          category: devtools}
