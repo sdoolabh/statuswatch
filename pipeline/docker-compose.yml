@@ -1,0 +1,15 @@
+# Local dev database. `docker compose up -d`, then schema auto-applies.
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: statuswatch
+      POSTGRES_PASSWORD: localdev
+      POSTGRES_DB: statuswatch
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+      - pgdata:/var/lib/postgresql/data
+volumes:
+  pgdata:
