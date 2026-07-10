@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>statuswatch — is it you, or is it them?</title>
+<meta name="description" content="Live status of the vendors platform teams depend on — GitHub, Cloudflare, AWS, Datadog and 30+ more, polled every two minutes.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#dbe4ee; --ink-dim:#7e8ea1; --bg:#0f1620; --panel:#161f2b;
+    --line:#243244; --ok:#5ba881; --warn:#e0973a; --partial:#e07a3a;
+    --major:#d95d4e; --maint:#6d9bd1; --unknown:#5c6a7c;
+  }
+  *{box-sizing:border-box;margin:0}
+  body{background:var(--bg);color:var(--ink);font-family:"IBM Plex Mono",monospace;
+       font-size:14px;padding:36px 22px 24px;max-width:1120px;margin:0 auto}
+  h1{font-family:"Archivo",sans-serif;font-weight:700;letter-spacing:-.02em;
+     font-size:clamp(26px,4vw,38px)}
+  h1 .tick{color:var(--warn)}
+  .sub{color:var(--ink-dim);margin-top:6px;max-width:62ch;line-height:1.55}
+
+  .pulse{display:flex;flex-wrap:wrap;gap:10px 26px;align-items:baseline;
+         border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+         padding:13px 0;margin:26px 0;font-size:12.5px}
+  .pulse b{font-weight:600}
+  .pulse .k{color:var(--ink-dim)}
+  #headline.ok{color:var(--ok)} #headline.bad{color:var(--warn)}
+  #stale{display:none;color:var(--major)}
+
+  section h2{font-family:"Archivo",sans-serif;font-size:13px;font-weight:500;
+             color:var(--ink-dim);text-transform:uppercase;letter-spacing:.14em;
+             margin:26px 0 12px}
+
+  .incidents{display:flex;flex-direction:column;gap:8px}
+  .incident{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--warn);
+            border-radius:6px;padding:12px 16px;display:flex;flex-wrap:wrap;
+            gap:4px 14px;align-items:baseline;text-decoration:none;color:var(--ink)}
+  .incident:hover{border-color:#33465e}
+  .incident.major_outage{border-left-color:var(--major)}
+  .incident.partial_outage{border-left-color:var(--partial)}
+  .incident .vendor{color:var(--warn);font-weight:600;font-size:12.5px;text-transform:uppercase;letter-spacing:.06em}
+  .incident.major_outage .vendor{color:var(--major)}
+  .incident .title{flex:1 1 100%;line-height:1.5;font-size:13.5px}
+  .incident .age{color:var(--ink-dim);font-size:12px}
+  .none{color:var(--ink-dim);background:var(--panel);border:1px solid var(--line);
+        border-radius:6px;padding:14px 16px;font-size:13px}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+  .tile{background:var(--panel);border:1px solid var(--line);border-radius:6px;
+        padding:12px 14px;display:flex;align-items:center;gap:10px}
+  .dot{width:9px;height:9px;border-radius:50%;flex:none}
+  .tile .name{flex:1;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .tile .st{font-size:11px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.05em}
+  .s-operational .dot{background:var(--ok)}
+  .s-degraded .dot{background:var(--warn)}
+  .s-partial_outage .dot{background:var(--partial)}
+  .s-major_outage .dot{background:var(--major);box-shadow:0 0 8px var(--major)}
+  .s-maintenance .dot{background:var(--maint)}
+  .s-unknown .dot{background:var(--unknown)}
+  .tile:not(.s-operational){border-color:#3a4a60}
+
+  footer{margin-top:40px;color:var(--ink-dim);font-size:12px;line-height:1.8;
+         border-top:1px solid var(--line);padding-top:16px}
+  footer a{color:var(--ink-dim)}
+  #err{display:none;color:var(--major);margin:20px 0}
+</style>
+</head>
+<body>
+<h1>statuswatch<span class="tick">_</span></h1>
+<p class="sub">Is it your code, or is a vendor down? Live status of the services
+platform teams depend on — polled from official status APIs every two minutes,
+normalized into one view.</p>
+
+<div class="pulse">
+  <span id="headline" class="ok"><b>…</b></span>
+  <span><span class="k">vendors watched</span> <b id="count">…</b></span>
+  <span><span class="k">updated</span> <b id="freshness">…</b></span>
+  <span id="stale"><b>⚠ data may be stale — pipeline may be catching up</b></span>
+</div>
+
+<div id="err">Couldn't load status data. The static page you're reading is fine — the data file didn't answer. Refresh in a minute.</div>
+
+<section id="incidents-section">
+  <h2>ongoing incidents</h2>
+  <div class="incidents" id="incidents"></div>
+</section>
+
+<section>
+  <h2>the board</h2>
+  <div class="grid" id="grid"></div>
+</section>
+
+<footer>
+  Polls official vendor status APIs every 2 minutes · raw payloads archived before parsing ·
+  an <a href="https://shanedoolabh.com">infrastructure portfolio project</a> by Shane Doolabh.<br>
+  Not affiliated with any vendor shown. Always confirm on the vendor's own status page before paging anyone.
+</footer>
+
+<script>
+const LABELS = {
+  operational: "operational", degraded: "degraded",
+  partial_outage: "partial outage", major_outage: "major outage",
+  maintenance: "maintenance", unknown: "unknown",
+};
+const SEVERITY = ["major_outage", "partial_outage", "degraded", "maintenance", "unknown", "operational"];
+
+const ago = (iso) => {
+  const s = Math.max(0, (Date.now() - new Date(iso)) / 1000);
+  if (s < 90) return `${Math.round(s)}s ago`;
+  if (s < 5400) return `${Math.round(s / 60)}m ago`;
+  if (s < 129600) return `${Math.round(s / 3600)}h ago`;
+  return `${Math.round(s / 86400)}d ago`;
+};
+
+async function load() {
+  let data;
+  try {
+    const res = await fetch("./status.json", { cache: "no-cache" });
+    if (!res.ok) throw new Error(res.status);
+    data = await res.json();
+    document.getElementById("err").style.display = "none";
+  } catch (e) {
+    document.getElementById("err").style.display = "block";
+    return;
+  }
+
+  // pulse strip
+  const vendors = data.vendors || [];
+  const troubled = vendors.filter(v => v.status !== "operational" && v.status !== "maintenance");
+  const headline = document.getElementById("headline");
+  if (troubled.length === 0) {
+    headline.className = "ok";
+    headline.innerHTML = "<b>all quiet</b>";
+  } else {
+    headline.className = "bad";
+    headline.innerHTML = `<b>${troubled.length} vendor${troubled.length > 1 ? "s" : ""} having trouble</b>`;
+  }
+  document.getElementById("count").textContent = vendors.length;
+  document.getElementById("freshness").textContent = ago(data.generated_at);
+  document.getElementById("stale").style.display =
+    (Date.now() - new Date(data.generated_at)) > 10 * 60 * 1000 ? "inline" : "none";
+
+  // incidents
+  const incEl = document.getElementById("incidents");
+  const incidents = data.ongoing_incidents || [];
+  incEl.innerHTML = incidents.length === 0
+    ? `<div class="none">No ongoing incidents across the board. Enjoy it while it lasts.</div>`
+    : incidents.map(i => `
+        <a class="incident ${i.impact}" href="${i.url || "#"}" target="_blank" rel="noopener">
+          <span class="vendor">${esc(i.vendor)}</span>
+          <span class="age">${ago(i.started_at)}</span>
+          <span class="title">${esc(i.title)}</span>
+        </a>`).join("");
+
+  // grid, troubled vendors first, then alphabetical
+  const sorted = [...vendors].sort((a, b) =>
+    SEVERITY.indexOf(a.status) - SEVERITY.indexOf(b.status) || a.name.localeCompare(b.name));
+  document.getElementById("grid").innerHTML = sorted.map(v => `
+      <div class="tile s-${v.status}" title="observed ${ago(v.observed_at)}">
+        <span class="dot"></span>
+        <span class="name">${esc(v.name)}</span>
+        <span class="st">${LABELS[v.status] || v.status}</span>
+      </div>`).join("");
+}
+
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g,
+  c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+load();
+setInterval(load, 60000);
+</script>
+</body>
+</html>
