@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: api
-          image: ghcr.io/CHANGEME/statuswatch-api:latest
+          image: ghcr.io/sdoolabh/statuswatch-api:latest
           ports:
             - name: http
               containerPort: 8000

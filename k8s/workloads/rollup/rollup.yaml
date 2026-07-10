@@ -15,7 +15,7 @@ spec:
           restartPolicy: Never
           containers:
             - name: rollup
-              image: ghcr.io/CHANGEME/statuswatch-rollup:latest
+              image: ghcr.io/sdoolabh/statuswatch-rollup:latest
               envFrom:
                 - secretRef:
                     name: statuswatch-db

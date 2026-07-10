@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/CHANGEME/statuswatch.git
+    repoURL: https://github.com/sdoolabh/statuswatch.git
     targetRevision: main
     path: k8s/workloads/rollup
   destination:
