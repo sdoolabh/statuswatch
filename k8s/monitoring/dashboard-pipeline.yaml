@@ -1,0 +1,49 @@
+# Grafana dashboard as code: pipeline freshness straight from poll_health via
+# the RDS datasource. Sidecar loads any ConfigMap with this label.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dashboard-statuswatch-pipeline
+  labels:
+    grafana_dashboard: "1"
+data:
+  statuswatch-pipeline.json: |
+    {
+      "title": "statuswatch pipeline",
+      "uid": "sw-pipeline",
+      "timezone": "browser",
+      "refresh": "1m",
+      "time": { "from": "now-6h", "to": "now" },
+      "panels": [
+        {
+          "type": "table",
+          "title": "Poll health (freshness SLO: last_success < 10 min)",
+          "gridPos": { "x": 0, "y": 0, "w": 24, "h": 10 },
+          "datasource": "statuswatch-postgres",
+          "targets": [{
+            "format": "table",
+            "rawSql": "SELECT vendor_slug, last_success, consecutive_failures, left(coalesce(last_error,''),80) AS last_error, EXTRACT(EPOCH FROM (now() - last_success))/60 AS minutes_stale FROM poll_health ORDER BY minutes_stale DESC NULLS FIRST"
+          }]
+        },
+        {
+          "type": "timeseries",
+          "title": "Snapshots ingested per 10 min (pipeline heartbeat)",
+          "gridPos": { "x": 0, "y": 10, "w": 12, "h": 9 },
+          "datasource": "statuswatch-postgres",
+          "targets": [{
+            "format": "time_series",
+            "rawSql": "SELECT date_trunc('minute', observed_at) - (EXTRACT(MINUTE FROM observed_at)::int % 10) * interval '1 minute' AS time, count(*) AS snapshots FROM status_snapshots WHERE observed_at > now() - interval '6 hours' GROUP BY 1 ORDER BY 1"
+          }]
+        },
+        {
+          "type": "timeseries",
+          "title": "Non-operational observations per 10 min",
+          "gridPos": { "x": 12, "y": 10, "w": 12, "h": 9 },
+          "datasource": "statuswatch-postgres",
+          "targets": [{
+            "format": "time_series",
+            "rawSql": "SELECT date_trunc('minute', observed_at) - (EXTRACT(MINUTE FROM observed_at)::int % 10) * interval '1 minute' AS time, count(*) FILTER (WHERE status <> 'operational') AS troubled FROM status_snapshots WHERE observed_at > now() - interval '6 hours' GROUP BY 1 ORDER BY 1"
+          }]
+        }
+      ]
+    }

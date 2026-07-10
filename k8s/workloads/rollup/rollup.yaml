@@ -1,0 +1,24 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: statuswatch-rollup
+spec:
+  schedule: "20 5 * * *"   # 05:20 UTC — after midnight everywhere in the US
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: rollup
+              image: ghcr.io/CHANGEME/statuswatch-rollup:latest
+              envFrom:
+                - secretRef:
+                    name: statuswatch-db
+              resources:
+                requests: { cpu: 50m, memory: 64Mi }
+                limits: { memory: 128Mi }

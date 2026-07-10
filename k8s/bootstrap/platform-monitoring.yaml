@@ -1,0 +1,48 @@
+# kube-prometheus-stack: Prometheus + Grafana + the CRDs (ServiceMonitor).
+# Grafana wiring: admin creds + the RDS datasource come from TF-created
+# secrets (see terraform-cluster/secrets.tf); dashboards load from any
+# ConfigMap labeled grafana_dashboard=1 (see k8s/monitoring/).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: platform-monitoring
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://prometheus-community.github.io/helm-charts
+    chart: kube-prometheus-stack
+    targetRevision: 67.5.0
+    helm:
+      valuesObject:
+        prometheus:
+          prometheusSpec:
+            retention: 24h
+            # lean: this cluster is cattle; long-term metrics aren't its job
+            resources:
+              requests: { cpu: 100m, memory: 400Mi }
+            serviceMonitorSelectorNilUsesHelmValues: false
+        grafana:
+          admin:
+            existingSecret: grafana-admin
+          sidecar:
+            datasources: { enabled: true, label: grafana_datasource }
+            dashboards: { enabled: true, label: grafana_dashboard, searchNamespace: ALL }
+          ingress:
+            enabled: true
+            ingressClassName: nginx
+            hosts: ["grafana.shanedoolabh.com"]
+        alertmanager:
+          enabled: false   # deliberate v1 scope cut; enable when adding paging
+        nodeExporter:
+          enabled: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true   # kube-prometheus-stack CRDs are huge
