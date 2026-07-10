@@ -1,8 +1,12 @@
 """Normalizer Lambda (runs INSIDE the VPC — needs the database, not internet).
 
 SQS -> upsert Postgres -> re-materialize status.json -> S3 data bucket (via
-the free S3 gateway endpoint). Vendor registry is seeded on cold start so a
-brand-new database self-initializes vendor rows.
+the free S3 gateway endpoint). Vendor registry is seeded on cold start.
+
+Connection hygiene (learned the hard way): _conn is reused across warm
+invocations, so ANY failure must rollback — otherwise the connection is
+permanently stuck in InFailedSqlTransaction and every later invocation
+fails instantly. Connection-level errors discard the connection entirely.
 """
 import json
 import os
@@ -32,6 +36,17 @@ def conn():
         )
         _seed_vendors(_conn)
     return _conn
+
+
+def _discard_conn():
+    """Connection-level problem: close and forget; next invoke reconnects."""
+    global _conn
+    try:
+        if _conn is not None:
+            _conn.close()
+    except Exception:
+        pass
+    _conn = None
 
 
 def _seed_vendors(c):
@@ -108,11 +123,21 @@ def _upsert_message(c, msg):
 
 
 def lambda_handler(event, _context):
-    c = conn()
-    for record in event.get("Records", []):
-        _upsert_message(c, json.loads(record["body"]))
+    try:
+        c = conn()
+        for record in event.get("Records", []):
+            _upsert_message(c, json.loads(record["body"]))
+        snapshot = materialize_snapshot(c, VENDORS)
+    except (psycopg2.OperationalError, psycopg2.InterfaceError):
+        _discard_conn()   # dead/broken connection: rebuild next invoke
+        raise             # let SQS retry the batch
+    except Exception:
+        try:
+            conn().rollback()   # CRITICAL: clear the aborted transaction
+        except Exception:
+            _discard_conn()
+        raise               # SQS retries; upserts are idempotent, so safe
 
-    snapshot = materialize_snapshot(c, VENDORS)
     S3.put_object(
         Bucket=DATA_BUCKET, Key="status.json", Body=snapshot.encode(),
         ContentType="application/json", CacheControl="max-age=60",

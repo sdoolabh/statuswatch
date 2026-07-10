@@ -56,7 +56,7 @@ resource "aws_db_instance" "postgres" {
   publicly_accessible    = false
   multi_az               = false # documented cost tradeoff; prod answer: multi-AZ
 
-  backup_retention_period = 7
+  backup_retention_period = 1
   skip_final_snapshot     = false
   final_snapshot_identifier = "statuswatch-final"
 

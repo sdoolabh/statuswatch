@@ -1,2 +1,5 @@
 .venv
 raw/
+.terraform
+.terraform.lock.hcl
+build/

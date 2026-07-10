@@ -6,7 +6,7 @@ terraform {
   required_version = ">= 1.10"
 
   backend "s3" {
-    bucket       = "CHANGEME-statuswatch-tfstate"
+    bucket       = "shanedoolabh-statuswatch-tfstate"
     key          = "persistent/terraform.tfstate"
     region       = "us-east-1"
     use_lockfile = true
