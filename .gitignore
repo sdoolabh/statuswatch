@@ -1,5 +1,9 @@
-.venv
+.venv/
 raw/
-.terraform
-.terraform.lock.hcl
+status.json
+__pycache__/
+.terraform/
+*.tfstate*
+*.tfvars
+!*.tfvars.example
 build/
