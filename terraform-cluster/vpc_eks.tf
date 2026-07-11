@@ -34,17 +34,22 @@ module "eks" {
   cluster_addons = {
     coredns                = {}
     kube-proxy             = {}
-    vpc-cni                = {}
+    vpc-cni = {
+      before_compute = true
+      configuration_values = jsonencode({
+        env = { ENABLE_PREFIX_DELEGATION = "true" }
+      })
+    }
     eks-pod-identity-agent = {}
   }
 
   eks_managed_node_groups = {
-    default = {
+    default-v2 = {
       instance_types = ["t3.small", "t3a.small"]
       capacity_type  = "SPOT"
-      min_size       = 2
-      desired_size   = 2
-      max_size       = 3
+      min_size       = 3
+      desired_size   = 4
+      max_size       = 5
       subnet_ids     = module.vpc.public_subnets
     }
   }
