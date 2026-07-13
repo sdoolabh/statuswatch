@@ -1,0 +1,33 @@
+# The "clerk": watches Services/Ingresses + Endpoints, provisions NLBs via
+# the AWS API, and keeps IP-mode target groups current as pods churn.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: platform-alb-controller
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://aws.github.io/eks-charts
+    chart: aws-load-balancer-controller
+    targetRevision: 1.11.0
+    helm:
+      valuesObject:
+        clusterName: statuswatch
+        region: us-east-1
+        serviceAccount:
+          create: true
+          name: aws-load-balancer-controller   # matched by the Pod Identity association
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 30s
+        factor: 2
+        maxDuration: 5m

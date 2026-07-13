@@ -36,3 +36,12 @@ logs-poller:
 
 logs-normalizer:
 	aws logs tail /aws/lambda/statuswatch-normalizer --follow
+
+cluster-down:
+	aws eks update-kubeconfig --name statuswatch --region us-east-1 || true
+	kubectl delete svc -n ingress-nginx platform-ingress-nginx-controller --ignore-not-found
+	sleep 90
+	terraform -chdir=terraform-cluster destroy -auto-approve
+
+cluster-up:
+	terraform -chdir=terraform-cluster apply -auto-approve

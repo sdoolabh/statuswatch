@@ -64,11 +64,11 @@ resource "helm_release" "argocd_apps" {
                 replicaCount = 1
                 service = {
                   annotations = {
-                    "service.beta.kubernetes.io/aws-load-balancer-type"             = "nlb"
+                    "service.beta.kubernetes.io/aws-load-balancer-type"             = "external"
+                    "service.beta.kubernetes.io/aws-load-balancer-nlb-target-type"  = "ip"
                     "service.beta.kubernetes.io/aws-load-balancer-scheme"           = "internet-facing"
                     "service.beta.kubernetes.io/aws-load-balancer-ssl-cert"         = aws_acm_certificate_validation.wildcard.certificate_arn
                     "service.beta.kubernetes.io/aws-load-balancer-ssl-ports"        = "443"
-                    "service.beta.kubernetes.io/aws-load-balancer-backend-protocol" = "tcp"
                   }
                   targetPorts = { https = "http" }
                 }
