@@ -1,11 +1,10 @@
-# AWS Load Balancer Controller — IAM via Pod Identity (same pattern as
-# external-dns). The controller watches Services/Ingresses and drives the
-# ELB API directly: in IP mode it registers nginx POD IPs as NLB targets
-# and re-registers them as pods churn (the "clerk" keeping the courier's
-# address book current).
+# AWS Load Balancer Controller — installed BY TERRAFORM (not ArgoCD), because
+# a Terraform-owned resource (the TargetGroupBinding below) depends on its
+# CRDs and webhook existing during apply. Rule of thumb this encodes:
+# cluster-bootstrap components that Terraform resources depend on live in
+# Terraform; the app layer stays GitOps.
 #
-# The controller's IAM policy is large and AWS-maintained; vendor it rather
-# than hand-writing (run once, commit the file):
+# One-time prerequisite (vendor the AWS-maintained policy):
 #   curl -o terraform-cluster/albc-iam-policy.json \
 #     https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/v2.11.0/docs/install/iam_policy.json
 
@@ -36,4 +35,46 @@ resource "aws_eks_pod_identity_association" "albc" {
   namespace       = "kube-system"
   service_account = "aws-load-balancer-controller"
   role_arn        = aws_iam_role.albc.arn
+}
+
+resource "helm_release" "albc" {
+  name       = "aws-load-balancer-controller"
+  namespace  = "kube-system"
+  repository = "https://aws.github.io/eks-charts"
+  chart      = "aws-load-balancer-controller"
+  version    = "1.11.0"
+
+  values = [yamlencode({
+    clusterName = module.eks.cluster_name
+    region      = var.region
+    vpcId       = module.vpc.vpc_id
+    serviceAccount = {
+      create = true
+      name   = "aws-load-balancer-controller"
+    }
+  })]
+
+  # wait=true (default): apply blocks until the controller (and its webhook,
+  # which validates TargetGroupBindings) is actually Ready.
+  depends_on = [module.eks, aws_eks_pod_identity_association.albc]
+}
+
+# The binding: "register the endpoints of Service ingress-nginx-controller
+# into the TF-owned target group, as pod IPs." Delivered via a tiny local
+# chart because helm validates CRs at INSTALL time (after the ALBC release
+# above guarantees the CRD exists) — unlike kubernetes_manifest, which would
+# fail at PLAN time on a fresh cluster.
+resource "helm_release" "tgb" {
+  name             = "ingress-tgb"
+  namespace        = "ingress-nginx"
+  create_namespace = true
+  chart            = "${path.module}/charts/tgb"
+
+  values = [yamlencode({
+    targetGroupARN = aws_lb_target_group.ingress_nginx.arn
+    serviceName    = "platform-ingress-nginx-controller"
+    servicePort    = 80
+  })]
+
+  depends_on = [helm_release.albc]
 }

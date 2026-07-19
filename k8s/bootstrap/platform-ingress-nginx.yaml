@@ -1,0 +1,35 @@
+# ingress-nginx, now PURE GitOps: plain ClusterIP Service, zero cloud
+# annotations. The TF-owned NLB reaches these pods via the TargetGroupBinding;
+# nginx's job is unchanged — read Host headers, route to apps.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: platform-ingress-nginx
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://kubernetes.github.io/ingress-nginx
+    chart: ingress-nginx
+    targetRevision: 4.12.1
+    helm:
+      valuesObject:
+        controller:
+          replicaCount: 2   # two targets in the TG; a deploy never empties it
+          service:
+            type: ClusterIP
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ingress-nginx
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 30s
+        factor: 2
+        maxDuration: 5m

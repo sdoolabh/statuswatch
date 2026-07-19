@@ -1,0 +1,4 @@
+apiVersion: v2
+name: tgb
+description: TargetGroupBinding bridging the TF-owned NLB target group to ingress-nginx
+version: 0.1.0

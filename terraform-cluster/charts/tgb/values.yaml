@@ -1,0 +1,3 @@
+targetGroupARN: ""
+serviceName: platform-ingress-nginx-controller
+servicePort: 80
